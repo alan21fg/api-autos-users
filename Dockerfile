@@ -7,14 +7,10 @@ RUN apt-get update && apt-get install -y \
     libzip-dev unzip git \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd zip \
-    && pecl install sodium \
-    && docker-php-ext-enable sodium
+    && docker-php-ext-install pdo pdo_mysql
 
 # Instala Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# Instala Laravel Octane y Spiral RoadRunner
-RUN composer global require laravel/octane spiral/roadrunner
 
 # Configura el directorio de trabajo
 WORKDIR /app
