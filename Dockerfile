@@ -4,13 +4,12 @@ FROM bitnami/laravel:latest
 RUN curl -sS https://getcomposer.org/installer | php -- \
     --install-dir=/usr/local/bin --filename=composer
 
-# Copia los archivos del proyecto
+# Configura el directorio de trabajo
 WORKDIR /app
+
+# Copia los archivos del proyecto
 COPY . .
 
-# Elimina dependencias existentes y vuelve a instalar
-RUN rm -rf /app/vendor
-RUN rm -rf /app/composer.lock
 RUN composer install
 
 # Instala paquetes adicionales
@@ -28,6 +27,6 @@ RUN php artisan config:clear
 RUN php artisan octane:install --server="swoole"
 
 # Comando de inicio
-CMD php artisan octane:start --server="swoole" --host="0.0.0.0"
+CMD ["php", "artisan", "octane:start", "--server=swoole", "--host=0.0.0.0"]
 
 EXPOSE 8000
