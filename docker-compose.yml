@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  app:
+    image: ${DOCKER_HUB_USERNAME}/api-autos-users:latest
+    container_name: api-autos-users
+    restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - .:/app
+    networks:
+      - app-network
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=apiautos
+      - DB_USERNAME=root
+      - DB_PASSWORD=
+
+  db:
+    image: mysql:8.0
+    container_name: mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ''
+      MYSQL_DATABASE: apiautos
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
