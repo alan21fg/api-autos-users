@@ -1,6 +1,7 @@
 # CARGAMOS IMAGEN DE PHP MODO ALPINE SUPER REDUCIDA
 FROM elrincondeisma/octane:latest
 
+
 # Agregar repositorio de PHP
 RUN curl -fsSL https://packages.sury.org/php/apt.gpg | apt-key add - \
     && echo "deb https://packages.sury.org/php/ $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/php.list
