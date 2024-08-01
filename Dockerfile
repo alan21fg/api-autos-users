@@ -27,7 +27,7 @@ RUN mkdir -p /app/storage/logs
 
 # Este paso puede fallar si la base de datos no está disponible durante la construcción de la imagen
 # Puedes omitirlo y ejecutarlo en el contenedor una vez que esté corriendo, si es necesario.
-RUN php artisan migrate --force
+# RUN php artisan migrate --force
 
 RUN php artisan cache:clear
 RUN php artisan view:clear
