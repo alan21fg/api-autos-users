@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use PhpParser\Node\Stmt\UseUse;
 
 class UserController extends Controller
 {
@@ -14,7 +13,8 @@ class UserController extends Controller
      */
     public function index()
     {
-        return User::all();
+        // Retorna todos los usuarios, incluyendo las contraseñas.
+        return response()->json(User::all(), 200);
     }
 
     /**
@@ -31,7 +31,6 @@ class UserController extends Controller
             'password' => 'required|string|min:8',
         ]);
 
-        // Crear el usuario con valores predeterminados para los campos no proporcionados
         $user = User::create([
             'name' => $validatedData['name'],
             'last' => $validatedData['last'],
@@ -39,9 +38,9 @@ class UserController extends Controller
             'image' => $validatedData['image'],
             'email' => $validatedData['email'],
             'password' => Hash::make($validatedData['password']),
-            'email_verified_at' => null, // Por defecto, sin verificar
-            'remember_token' => null,    // No se establece
         ]);
+
+        // Retorna el usuario creado, incluyendo la contraseña.
         return response()->json($user, 201);
     }
 
@@ -50,7 +49,8 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        return User::findOrFail($user->id);
+        // Retorna el usuario especificado, incluyendo la contraseña.
+        return response()->json($user, 200);
     }
 
     /**
@@ -67,9 +67,13 @@ class UserController extends Controller
             'password' => 'sometimes|string|min:8',
         ]);
 
-        // Actualizar solo los campos que están presentes en el request
+        // Actualizar el usuario.
+        if (isset($validatedData['password'])) {
+            $validatedData['password'] = Hash::make($validatedData['password']);
+        }
         $user->update($validatedData);
 
+        // Retorna el usuario actualizado, incluyendo la contraseña.
         return response()->json($user, 200);
     }
 
@@ -78,13 +82,7 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        $user = User::findOrFail($user->id);
-
-        if (is_null($user)) {
-            return response()->json('No se pudo realizar correctamente la operción', 404);
-        }
-
         $user->delete();
-        return response()->noContent();
+        return response()->json(null, 204);
     }
 }

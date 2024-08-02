@@ -12,7 +12,8 @@ class AutosController extends Controller
      */
     public function index()
     {
-        return Autos::all();
+        $autos = Autos::all();
+        return response()->json($autos, 200);
     }
 
     /**
@@ -40,53 +41,57 @@ class AutosController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Autos $autos)
+    public function show($id)
     {
-        return Autos::find($autos->id);
+        $autos = Autos::find($id);
+
+        if (!$autos) {
+            return response()->json(['message' => 'Auto no encontrado'], 404);
+        }
+
+        return response()->json($autos, 200);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Autos $autos)
+    public function update(Request $request, $id)
     {
-        $request->validate([
-            "marca" => "required",
-            "modelo" => "required",
-            "año" => "required",
-            "color" => "required",
-            "matricula" => "required",
-            "precio" => "required",
-            "estado" => "required",
-            "descripcion" => "required"
+        $autos = Autos::find($id);
+
+        if (!$autos) {
+            return response()->json(['message' => 'Auto no encontrado'], 404);
+        }
+
+        $validatedData = $request->validate([
+            'marca' => 'sometimes|string|max:50',
+            'modelo' => 'sometimes|string|max:50',
+            'año' => 'sometimes|integer|digits:4',
+            'color' => 'sometimes|string|max:30',
+            'matricula' => 'sometimes|string|max:20',
+            'precio' => 'sometimes|numeric|min:0',
+            'estado' => 'sometimes|string|max:20',
+            'descripcion' => 'sometimes|string',
+            'imagen' => 'nullable|url|max:255',
         ]);
 
-        $autos->marca = $request->marca;
-        $autos->modelo = $request->modelo;
-        $autos->año = $request->año;
-        $autos->color = $request->color;
-        $autos->matricula = $request->matricula;
-        $autos->precio = $request->precio;
-        $autos->estado = $request->estado;
-        $autos->descripcion = $request->descripcion;
-        $autos->imagen = $request->imagen;
-        $autos->update();
+        $autos->update($validatedData);
 
-        return $autos;
+        return response()->json($autos, 200);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Autos $autos)
+    public function destroy($id)
     {
-        $autos = Autos::find($autos->id);
+        $autos = Autos::find($id);
 
-        if (is_null($autos)) {
-            return response()->json('No se pudo realizar correctamente la operción', 404);
+        if (!$autos) {
+            return response()->json(['message' => 'Auto no encontrado'], 404);
         }
 
         $autos->delete();
-        return response()->noContent();
+        return response()->json(null, 204);
     }
 }
