@@ -1,27 +1,5 @@
 FROM bitnami/laravel:latest
 
-# Instala herramientas de desarrollo necesarias
-RUN apt-get update && apt-get install -y \
-    pkg-config \
-    libc-ares-dev \
-    libssl-dev \
-    libcurl4-openssl-dev \
-    libbrotli-dev \
-    build-essential \
-    autoconf \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    libzip-dev \
-    libicu-dev \
-    libxml2-dev \
-    libonig-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Instala extensiones PHP
-RUN docker-php-ext-install mysqli pdo pdo_mysql bcmath gd mbstring opcache
-RUN pecl install swoole redis && docker-php-ext-enable swoole redis
-
 # Configura el directorio de trabajo
 WORKDIR /app
 
@@ -35,11 +13,15 @@ RUN curl -sS https://getcomposer.org/installer | php -- \
 # Instala las dependencias del proyecto
 RUN composer install
 
+# Instala paquetes adicionales (si es necesario)
+RUN composer require laravel/octane spiral/roadrunner
+
 # Configura el entorno
 COPY .env.example .env
 RUN mkdir -p /app/storage/logs
 
 # Ejecuta comandos de Laravel durante la construcción (opcional)
+# Puedes optar por ejecutar estos comandos en un contenedor separado durante el despliegue
 RUN php artisan migrate --seed || true
 RUN php artisan cache:clear || true
 RUN php artisan view:clear || true
