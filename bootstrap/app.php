@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         \App\Http\Middleware\Cors::class;
+        \App\Http\Middleware\VerifyCsrfToken::class;
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

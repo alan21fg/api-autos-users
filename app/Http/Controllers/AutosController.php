@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Autos;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class AutosController extends Controller
 {
@@ -13,7 +14,11 @@ class AutosController extends Controller
     public function index()
     {
         $autos = Autos::all();
-        return response()->json($autos, 200);
+        $data = [
+            'autos' => $autos,
+            'status' => 200,
+        ];
+        return response()->json($data, 200);
     }
 
     /**
@@ -21,7 +26,7 @@ class AutosController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
+        $validatedData = Validator::make($request->all(), [
             'marca' => 'required|string|max:50',
             'modelo' => 'required|string|max:50',
             'año' => 'required|integer|digits:4',
@@ -33,7 +38,39 @@ class AutosController extends Controller
             'imagen' => 'nullable|url|max:255',
         ]);
 
-        $autos = Autos::create($validatedData);
+        if ($validatedData->fails()) {
+            $data = [
+                'message' => 'Error en la validación de los datos',
+                'errors' => $validatedData->errors(),
+                'status' => 400
+            ];
+            return response()->json($data, 400);
+        }
+
+        $autos = Autos::create([
+            'marca' => $request->marca,
+            'modelo' => $request->modelo,
+            'año' => $request->año,
+            'color' => $request->color,
+            'matricula' => $request->matricula,
+            'precio' => $request->precio,
+            'estado' => $request->estado,
+            'descripcion' => $request->descripcion,
+            'imagen' => $request->imagen,
+        ]);
+
+        if (!$autos) {
+            $data = [
+                'message' => 'Error al crear auto',
+                'status' => 500
+            ];
+            return response()->json($data, 500);
+        }
+
+        $data = [
+            'auto' => $autos,
+            'status' => 201
+        ];
 
         return response()->json($autos, 201);
     }
@@ -43,13 +80,21 @@ class AutosController extends Controller
      */
     public function show($id)
     {
-        $autos = Autos::find($id);
+        $auto = Autos::find($id);
 
-        if (!$autos) {
-            return response()->json(['message' => 'Auto no encontrado'], 404);
+        if (!$auto) {
+            $data = [
+                'message'=> 'Auto no encontrado',
+                'status'=> 404
+            ];
+            return response()->json($data, 404);
         }
+        $data = [
+            'auto'=> $auto,
+            'status'=> 200
+        ];
 
-        return response()->json($autos, 200);
+        return response()->json($data, 200);
     }
 
     /**
@@ -60,24 +105,51 @@ class AutosController extends Controller
         $autos = Autos::find($id);
 
         if (!$autos) {
-            return response()->json(['message' => 'Auto no encontrado'], 404);
+            $data = [
+                'message'=> 'Auto no encontrado',
+                'status'=> 404
+            ];
+            return response()->json($data, 404);
         }
 
-        $validatedData = $request->validate([
-            'marca' => 'sometimes|string|max:50',
-            'modelo' => 'sometimes|string|max:50',
-            'año' => 'sometimes|integer|digits:4',
-            'color' => 'sometimes|string|max:30',
-            'matricula' => 'sometimes|string|max:20',
-            'precio' => 'sometimes|numeric|min:0',
-            'estado' => 'sometimes|string|max:20',
-            'descripcion' => 'sometimes|string',
+        $validatedData = Validator::make($request->all(), [
+            'marca' => 'required|string|max:50',
+            'modelo' => 'required|string|max:50',
+            'año' => 'required|integer|digits:4',
+            'color' => 'required|string|max:30',
+            'matricula' => 'required|string|max:20',
+            'precio' => 'required|numeric|min:0',
+            'estado' => 'required|string|max:20',
+            'descripcion' => 'required|string',
             'imagen' => 'nullable|url|max:255',
         ]);
 
-        $autos->update($validatedData);
+        if ($validatedData->fails()) {
+            $data = [
+                'message' => 'Error en la validación de los datos',
+                'errors' => $validatedData->errors(),
+                'status' => 400
+            ];
+            return response()->json($data, 400);
+        }
 
-        return response()->json($autos, 200);
+        $autos->marca = $request->marca;
+        $autos->modelo =  $request->modelo;
+        $autos->año = $request->año;
+        $autos->color = $request->color;
+        $autos->matricula = $request->matricula;
+        $autos->precio = $request->precio;
+        $autos->estado = $request->estado;
+        $autos->descripcion = $request->descripcion;
+        $autos->imagen =  $request->imagen;
+        $autos->update();
+
+        $data = [
+            'message'=> 'Auto actualizado',
+            'auto'=> $autos,
+            'status'=> 200
+        ];
+        return response()->json($data, 200);
     }
 
     /**
@@ -88,10 +160,19 @@ class AutosController extends Controller
         $autos = Autos::find($id);
 
         if (!$autos) {
-            return response()->json(['message' => 'Auto no encontrado'], 404);
+            $data = [
+                'message'=> 'Auto no encontrado',
+                'status'=> 404
+            ];
+            return response()->json($data, 404);
         }
 
         $autos->delete();
-        return response()->json(null, 204);
+
+        $data = [
+            'message'=> 'Auto eliminado',
+            'status'=> 200
+        ];
+        return response()->json($data, 204);
     }
 }

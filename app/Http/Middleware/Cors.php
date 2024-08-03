@@ -18,12 +18,18 @@ class Cors
 {
     public function handle($request, Closure $next)
     {
-        return $next($request)
-            //Url a la que se le dará acceso en las peticiones
-            ->header("Access-Control-Allow-Origin", "*")
-            //Métodos que a los que se da acceso
-            ->header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-            //Headers de la petición
-            ->header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, X-Token-Auth, Authorization");
+        $response = $next($request);
+
+        // Agregar headers CORS
+        $response->headers->set('Access-Control-Allow-Origin', '*');
+        $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        $response->headers->set('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, X-Token-Auth, Authorization');
+
+        // Manejar preflight requests
+        if ($request->isMethod('OPTIONS')) {
+            return $response->setStatusCode(200);
+        }
+
+        return $response;
     }
 }

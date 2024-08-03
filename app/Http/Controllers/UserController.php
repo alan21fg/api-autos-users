@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
@@ -13,8 +14,12 @@ class UserController extends Controller
      */
     public function index()
     {
-        // Retorna todos los usuarios, incluyendo las contraseñas.
-        return response()->json(User::all(), 200);
+        $users = User::all();
+        $data = [
+            'usuarios' => $users,
+            'status' => 200,
+        ];
+        return response()->json($data, 200);
     }
 
     /**
@@ -22,7 +27,7 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
+        $validatedData = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'last' => 'required|string|max:255',
             'user' => 'required|string|max:255|unique:users',
@@ -31,58 +36,130 @@ class UserController extends Controller
             'password' => 'required|string|min:8',
         ]);
 
+        if ($validatedData->fails()) {
+            $data = [
+                'message' => 'Error en la validación de los datos',
+                'errors' => $validatedData->errors(),
+                'status' => 400
+            ];
+            return response()->json($data, 400);
+        }
+
         $user = User::create([
-            'name' => $validatedData['name'],
-            'last' => $validatedData['last'],
-            'user' => $validatedData['user'],
-            'image' => $validatedData['image'],
-            'email' => $validatedData['email'],
-            'password' => Hash::make($validatedData['password']),
+            'name' => $request->name,
+            'last' => $request->last,
+            'user' => $request->user,
+            'image' => $request->image,
+            'email' => $request->email,
+            'password' => $request->password,
         ]);
 
-        // Retorna el usuario creado, incluyendo la contraseña.
-        return response()->json($user, 201);
+        if (!$user) {
+            $data = [
+                'message' => 'Error al crear usuario',
+                'status' => 500
+            ];
+            return response()->json($data, 500);
+        }
+
+        $data = [
+            'usuario' => $user,
+            'status' => 201
+        ];
+
+        return response()->json($data, 201);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(User $user)
+    public function show($id)
     {
-        // Retorna el usuario especificado, incluyendo la contraseña.
-        return response()->json($user, 200);
+        $user = User::find($id);
+
+        if (!$user) {
+            $data = [
+                'message' => 'Usuario no encontrado',
+                'status' => 404
+            ];
+            return response()->json($data, 404);
+        }
+
+        $data = [
+            'usuario' => $user,
+            'status' => 200
+        ];
+        return response()->json($data, 200);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, User $user)
+    public function update(Request $request, $id)
     {
-        $validatedData = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'last' => 'sometimes|string|max:255',
-            'user' => 'sometimes|string|max:255|unique:users,user,' . $user->id,
-            'image' => 'sometimes|url',
-            'email' => 'sometimes|string|email|max:255|unique:users,email,' . $user->id,
-            'password' => 'sometimes|string|min:8',
+        $user = User::find($id);
+        if (!$user) {
+            $data = [
+                'message' => 'Usuario no encontrado',
+                'status' => 404
+            ];
+            return response()->json($data, 404);
+        }
+
+        $validatedData = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'last' => 'required|string|max:255',
+            'user' => 'required|string|max:255|unique:users',
+            'image' => 'required|url',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8',
         ]);
 
-        // Actualizar el usuario.
-        if (isset($validatedData['password'])) {
-            $validatedData['password'] = Hash::make($validatedData['password']);
+        if ($validatedData->fails()) {
+            $data = [
+                'message' => 'Error en la validación de los datos',
+                'errors' => $validatedData->errors(),
+                'status' => 400
+            ];
+            return response()->json($data, 400);
         }
-        $user->update($validatedData);
+        $user->name = $request->name;
+        $user->last = $request->last;
+        $user->user = $request->user;
+        $user->image = $request->image;
+        $user->email = $request->email;
+        $user->password = $request->password;
+        $user->update();
 
-        // Retorna el usuario actualizado, incluyendo la contraseña.
-        return response()->json($user, 200);
+        $data = [
+            'message' => 'Usuario actualizado',
+            'auto' => $user,
+            'status' => 200
+        ];
+        return response()->json($data, 200);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(User $user)
+    public function destroy($id)
     {
+        $user = User::find($id);
+
+        if (!$user) {
+            $data = [
+                'message' => 'Usuario no encontrado',
+                'status' => 404
+            ];
+            return response()->json($data, 404);
+        }
+
         $user->delete();
-        return response()->json(null, 204);
+
+        $data = [
+            'message' => 'Auto eliminado',
+            'status' => 200
+        ];
+        return response()->json($data, 204);
     }
 }
