@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class UserController extends Controller
 {
@@ -79,18 +80,20 @@ class UserController extends Controller
 
         if (!$user) {
             $data = [
-                'message' => 'Usuario no encontrado',
-                'status' => 404
+                'message'=> 'Usuario no encontrado',
+                'status'=> 404
             ];
             return response()->json($data, 404);
         }
-
         $data = [
-            'usuario' => $user,
-            'status' => 200
+            'usuario'=> $user,
+            'status'=> 200
         ];
+
         return response()->json($data, 200);
     }
+
+
 
     /**
      * Update the specified resource in storage.
@@ -223,4 +226,45 @@ class UserController extends Controller
         ];
         return response()->json($data, 200);
     }
+
+    public function authenticate(Request $request)
+    {
+        $validatedData = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required|string|min:8',
+        ]);
+
+        if ($validatedData->fails()) {
+            return response()->json([
+                'message' => 'Error en la validación de los datos',
+                'errors' => $validatedData->errors(),
+                'status' => 400
+            ], 400);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Usuario no encontrado',
+                'status' => 404
+            ], 404);
+        }
+
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'error' => 'Unauthorized',
+                'status' => 401
+            ], 401);
+        }
+
+        $token = JWTAuth::fromUser($user);
+
+        return response()->json([
+            'usuario' => $user,
+            'token' => $token,
+            'status' => 200
+        ], 200);
+    }
+
 }
