@@ -51,7 +51,7 @@ class UserController extends Controller
             'user' => $request->user,
             'image' => $request->image,
             'email' => $request->email,
-            'password' => $request->password,
+            'password' => Hash::make($request->password),
         ]);
 
         if (!$user) {
@@ -112,7 +112,7 @@ class UserController extends Controller
             'user' => 'required|string|max:255|unique:users',
             'image' => 'required|url',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
+            'password' => 'nullable|string|min:8',
         ]);
 
         if ($validatedData->fails()) {
@@ -128,7 +128,9 @@ class UserController extends Controller
         $user->user = $request->user;
         $user->image = $request->image;
         $user->email = $request->email;
-        $user->password = $request->password;
+        if ($request->has('password') && $request->password) {
+            $user->password = Hash::make($request->password);
+        }
         $user->update();
 
         $data = [
@@ -208,8 +210,8 @@ class UserController extends Controller
         if ($request->has('email')) {
             $user->email = $request->email;
         }
-        if ($request->has('password')) {
-            $user->password = $request->password;
+        if ($request->has('password') && $request->password) {
+            $user->password = Hash::make($request->password);
         }
 
         $user->save();
