@@ -14,5 +14,5 @@ use Illuminate\Support\Facades\Route;
 Route::middleware([Cors::class, VerifyCsrfToken::class])->group(function () {
     Route::apiResource('/autos', AutosController::class);
     Route::apiResource('/users', UserController::class);
-    Route::post('/authenticate', [UserController::class, 'authenticate']);
+    Route::post('/login', [UserController::class, 'login']);
 });

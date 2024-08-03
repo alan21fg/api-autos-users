@@ -80,14 +80,14 @@ class UserController extends Controller
 
         if (!$user) {
             $data = [
-                'message'=> 'Usuario no encontrado',
-                'status'=> 404
+                'message' => 'Usuario no encontrado',
+                'status' => 404
             ];
             return response()->json($data, 404);
         }
         $data = [
-            'usuario'=> $user,
-            'status'=> 200
+            'usuario' => $user,
+            'status' => 200
         ];
 
         return response()->json($data, 200);
@@ -227,43 +227,35 @@ class UserController extends Controller
         return response()->json($data, 200);
     }
 
-    public function authenticate(Request $request)
+    public function login(Request $request)
     {
-        $validatedData = Validator::make($request->all(), [
+        // Validar los datos de entrada
+        $credentials = $request->only('email', 'password');
+        $validator = Validator::make($credentials, [
             'email' => 'required|email',
-            'password' => 'required|string|min:8',
+            'password' => 'required',
         ]);
 
-        if ($validatedData->fails()) {
+        if ($validator->fails()) {
             return response()->json([
-                'message' => 'Error en la validación de los datos',
-                'errors' => $validatedData->errors(),
-                'status' => 400
+                'message' => 'Datos de entrada inválidos',
+                'errors' => $validator->errors(),
+                'status' => 400,
             ], 400);
         }
 
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user) {
+        // Intentar autenticar al usuario
+        if (!$token = JWTAuth::attempt($credentials)) {
             return response()->json([
-                'message' => 'Usuario no encontrado',
-                'status' => 404
-            ], 404);
-        }
-
-        if (!Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'error' => 'Unauthorized',
-                'status' => 401
+                'message' => 'Credenciales inválidas',
+                'status' => 401,
             ], 401);
         }
 
-        $token = JWTAuth::fromUser($user);
-
+        // Retornar el token JWT
         return response()->json([
-            'usuario' => $user,
             'token' => $token,
-            'status' => 200
+            'status' => 200,
         ], 200);
     }
 
