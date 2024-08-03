@@ -162,4 +162,63 @@ class UserController extends Controller
         ];
         return response()->json($data, 204);
     }
+
+    public function updatePartial(Request $request, $id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            $data = [
+                'message' => 'Usuario no encontrado',
+                'status' => 404
+            ];
+            return response()->json($data, 404);
+        }
+
+        $validatedData = Validator::make($request->all(), [
+            'name' => 'string|max:255',
+            'last' => 'string|max:255',
+            'user' => 'string|max:255|unique:users',
+            'image' => 'nullable|url',
+            'email' => 'string|email|max:255|unique:users',
+            'password' => 'string|min:8',
+        ]);
+
+        if ($validatedData->fails()) {
+            $data = [
+                'message' => 'Error en la validación de los datos',
+                'errors' => $validatedData->errors(),
+                'status' => 400
+            ];
+            return response()->json($data, 400);
+        }
+
+        if ($request->has('name')) {
+            $user->name = $request->name;
+        }
+        if ($request->has('last')) {
+            $user->last = $request->last;
+        }
+        if ($request->has('user')) {
+            $user->user = $request->user;
+        }
+        if ($request->has('image')) {
+            $user->image = $request->image;
+        }
+        if ($request->has('email')) {
+            $user->email = $request->email;
+        }
+        if ($request->has('password')) {
+            $user->password = $request->password;
+        }
+
+        $user->save();
+
+        $data = [
+            'message' => 'Usuario actualizado',
+            'auto' => $user,
+            'status' => 200
+        ];
+        return response()->json($data, 200);
+    }
 }

@@ -175,4 +175,75 @@ class AutosController extends Controller
         ];
         return response()->json($data, 204);
     }
+
+    public function updatePartial(Request $request, $id)
+    {
+        $autos = Autos::find($id);
+
+        if (!$autos) {
+            $data = [
+                'message' => 'Usuario no encontrado',
+                'status' => 404
+            ];
+            return response()->json($data, 404);
+        }
+
+        $validatedData = Validator::make($request->all(), [
+            'marca' => 'string|max:50',
+            'modelo' => 'string|max:50',
+            'año' => 'integer|digits:4',
+            'color' => 'string|max:30',
+            'matricula' => 'string|max:20',
+            'precio' => 'numeric|min:0',
+            'estado' => 'string|max:20',
+            'descripcion' => 'string',
+            'imagen' => 'nullable|url|max:255',
+        ]);
+
+        if ($validatedData->fails()) {
+            $data = [
+                'message' => 'Error en la validación de los datos',
+                'errors' => $validatedData->errors(),
+                'status' => 400
+            ];
+            return response()->json($data, 400);
+        }
+
+        if ($request->has('marca')) {
+            $autos->marca = $request->marca;
+        }
+        if ($request->has('modelo')) {
+            $autos->modelo = $request->modelo;
+        }
+        if ($request->has('año')) {
+            $autos->año = $request->año;
+        }
+        if ($request->has('color')) {
+            $autos->color = $request->color;
+        }
+        if ($request->has('matricula')) {
+            $autos->matricula = $request->matricula;
+        }
+        if ($request->has('precio')) {
+            $autos->precio = $request->precio;
+        }
+        if ($request->has('estado')) {
+            $autos->estado = $request->estado;
+        }
+        if ($request->has('descripcion')) {
+            $autos->descripcion = $request->descripcion;
+        }
+        if ($request->has('imagen')) {
+            $autos->imagen = $request->imagen;
+        }
+
+        $autos->save();
+
+        $data = [
+            'message' => 'Auto actualizado',
+            'auto' => $autos,
+            'status' => 200
+        ];
+        return response()->json($data, 200);
+    }
 }
