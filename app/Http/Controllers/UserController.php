@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class UserController extends Controller
@@ -244,12 +245,19 @@ class UserController extends Controller
             ], 400);
         }
 
-        // Intentar autenticar al usuario
-        if (!$token = JWTAuth::attempt($credentials)) {
+        try {
+            // Intentar autenticar al usuario
+            if (!$token = JWTAuth::attempt($credentials)) {
+                return response()->json([
+                    'message' => 'Credenciales inválidas',
+                    'status' => 401,
+                ], 401);
+            }
+        } catch (JWTException $e) {
             return response()->json([
-                'message' => 'Credenciales inválidas',
-                'status' => 401,
-            ], 401);
+                'message' => 'No se pudo crear el token',
+                'status' => 500,
+            ], 500);
         }
 
         // Retornar el token JWT
@@ -258,5 +266,6 @@ class UserController extends Controller
             'status' => 200,
         ], 200);
     }
+
 
 }
